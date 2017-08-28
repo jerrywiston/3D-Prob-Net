@@ -90,18 +90,20 @@ def SurfaceSamp(p1, p2, p3, total):
 		return pc
 
 	for i in range(total-3):
-		w = np.random.uniform(0., 1., size=[3])
-		w_norm = np.linalg.norm(w, ord=1)
-		w /= w_norm
-		x_samp = p1[0]*w[0] + p2[0]*w[1] + p3[0]*w[2]
-		y_samp = p1[1]*w[0] + p2[1]*w[1] + p3[1]*w[2]
-		z_samp = p1[2]*w[0] + p2[2]*w[1] + p3[2]*w[2]
-		pc.append([x_samp, y_samp, z_samp])
+		r = np.random.uniform(0., 1., size=[1])[0]
+		w1 = np.random.uniform(0., r, size=[1])[0]
+		w2 = r - w1
 
-	return pc
+		vec1 = np.asarray([p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]])
+		vec2 = np.asarray([p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])
+
+		p = np.asarray(p1) + w1*vec1 + w2*vec2
+		pc.append([p[0], p[1], p[2]])
+
+	return pc	
 
 def SampFromCAD(v, s):
-	magic_rate = 0.0001
+	magic_rate = 0.00005
 	pc = []
 	for i in range(len(s)):
 		p1 = v[s[i][1]]
@@ -151,5 +153,14 @@ tree = KDTree(pc, leaf_size=2)
 dist, ind = tree.query([pc[3]], k=3)
 print(ind)
 print(dist)
-'''
 
+p1 = [0.0,0.0,0.0]
+p2 = [1.0,0.0,0.0]
+p3 = [0.0,1.0,0.0]
+pc = SurfaceSamp(p1,p2,p3,1000)
+DrawPc(pc)
+
+pc = TrainSampCAD("chair_0001.off")
+print(len(pc))
+DrawPc(pc)
+'''

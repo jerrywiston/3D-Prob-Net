@@ -39,7 +39,7 @@ sess = tf.Session()
 #sess.run(tf.global_variables_initializer())
 
 saver = tf.train.Saver()
-saver.restore(sess, "Model/model.ckpt")
+saver.restore(sess, "Model/chair.ckpt")
 
 x_re = uniform_samp(500000,3)
 y_re = sess.run(y,feed_dict={x_: x_re})
