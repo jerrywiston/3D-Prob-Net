@@ -22,7 +22,6 @@ def prob_samp(tree, x_samp):
 			y[i] = (res - dist[i]) / res
 	return y
 
-
 def next_batch(imgs, size):
     img_samp = np.ndarray(shape=(size, 3))
     label_samp = np.ndarray(shape=(size, 1))
@@ -31,6 +30,16 @@ def next_batch(imgs, size):
         img_samp[i] = imgs[rand_num]
         label_samp[i] = 1.0
     return [img_samp, label_samp]
+
+def ProbNetSamp(samp=500000, prob=0.94):
+	x_re = uniform_samp(samp,3)
+	y_re = sess.run(y,feed_dict={x_: x_re})
+	pc_re = []
+	for i in range(y_re.shape[0]):
+		if y_re[i] > prob:
+			pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
+
+	return pc_re
 
 #Probability Net
 x_ = tf.placeholder(tf.float32, shape=[None, 3])
@@ -61,7 +70,7 @@ sess.run(tf.global_variables_initializer())
 
 #Read Pointcloud
 #pc = TrainSampNpts("horse.npts")
-pc = TrainSampCAD("chair_0001.off")
+pc = TrainSampCAD("chair_0003.off")
 #DrawPc(pc,[[0,1],[0,1],[0,1]])
 tree = KDTree(pc, leaf_size=2)
 
@@ -77,6 +86,8 @@ for i in range(100000):
 	_, _loss = sess.run([solver, loss],  feed_dict={x_: x_samp, y_: y_samp})
 	if i%1000 == 0:
 		print(str(i) + " " + str(_loss))
+		pc_re = ProbNetSamp(samp=50000, prob=0.9)
+		DrawPc(pc_re, show=False, filename="out/" + str(i))
 
 print("Save parameter ...")
 saver = tf.train.Saver()

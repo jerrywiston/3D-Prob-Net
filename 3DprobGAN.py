@@ -94,6 +94,10 @@ def Discriminator(x, y):
     
     return D_logit
 
+G_sample = generator(x_)
+D_real = discriminator(y_)
+D_fake = discriminator(G_sample)
+
 D_loss = 0.5 * (tf.reduce_mean((D_real - 1)**2) + tf.reduce_mean((D_fake + 1)**2))
 G_loss = 0.5 * tf.reduce_mean((D_fake)**2)
 

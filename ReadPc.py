@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 #from sklearn.neighbors import KDTree
 
-def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]]):
+def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="figure"):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')	
 
@@ -14,11 +14,16 @@ def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]]):
 	ax.set_ylabel('Y Label')
 	ax.set_zlabel('Z Label')
 
-	ax.set_aspect(1)
+	ax.set_aspect('equal')
 	ax.set_xlim(scale[0])
 	ax.set_ylim(scale[1])
 	ax.set_zlim(scale[2])
-	plt.show()
+	#plt.axis('off')
+	if(show):
+		plt.show()
+	else:
+		plt.savefig(filename + '.png', bbox_inches='tight')
+	plt.close(fig)
 
 def Rescale(pc):
 	bound = [[999,-999],[999,-999],[999,-999]]
@@ -50,9 +55,10 @@ def Rescale(pc):
 			p[i] += 0.5
 
 # Npts
-def ReadNpts(filename,num):
+def ReadNpts(filename,num=-1):
 	file = open(filename, "r")
 	content = file.read().strip().split("\n")
+	file.close()
 	
 	total = len(content)
 	if num>0 and num<total:
@@ -70,6 +76,12 @@ def ReadNpts(filename,num):
 
 	print("Read Npts Done !!")
 	return pc
+
+def SaveNpts(pc, filename):
+	file = open(filename, "w")
+	for p in pc:
+		file.writelines(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + "\n")
+	file.close()
 
 def TrainSampNpts(filename):
 	pc = ReadNpts(filename, -1)
@@ -116,6 +128,7 @@ def SampFromCAD(v, s):
 def ReadCAD(filename):
 	file = open(filename, "r")
 	content = file.read().strip().split("\n")
+	file.close()
 	v_total = int(content[1].split(" ")[0])
 	s_total = int(content[1].split(" ")[1])
 	print(content[0])
@@ -162,5 +175,8 @@ DrawPc(pc)
 
 pc = TrainSampCAD("chair_0001.off")
 print(len(pc))
-DrawPc(pc)
+DrawPc(pc, show=False)
 '''
+
+
+
