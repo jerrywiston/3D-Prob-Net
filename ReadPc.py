@@ -1,31 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from sklearn.neighbors import KDTree
+#from sklearn.neighbors import KDTree
 
-def ReadNpts(filename,num):
-	file = open(filename, "r")
-	content = file.read().strip().split("\n")
-	
-	total = len(content)
-	if num>0 and num<total:
-		total = num
-
-	print("Total: " + str(total))
-	pc = [0] * total
-
-	for i in range(total):
-		temp = content[i].split(" ")
-		p1 = float(temp[0].strip())
-		p2 = float(temp[1].strip())
-		p3 = float(temp[2].strip())
-		pc[i] = [p1, p2, p3]
-
-	print("Read Npts Done !!")
-	return pc
-
-
-def DrawPc(pc, scale=[[-0.1, 0.1],[-0.1, 0.1],[-0.1, 0.1]]):
+def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]]):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')	
 
@@ -70,6 +48,98 @@ def Rescale(pc):
 			p[i] -= (bound[i][1] + bound[i][0])/2
 			p[i] *= rate
 			p[i] += 0.5
+
+# Npts
+def ReadNpts(filename,num):
+	file = open(filename, "r")
+	content = file.read().strip().split("\n")
+	
+	total = len(content)
+	if num>0 and num<total:
+		total = num
+
+	print("Total: " + str(total))
+	pc = [0] * total
+
+	for i in range(total):
+		temp = content[i].split(" ")
+		p1 = float(temp[0].strip())
+		p2 = float(temp[1].strip())
+		p3 = float(temp[2].strip())
+		pc[i] = [p1, p2, p3]
+
+	print("Read Npts Done !!")
+	return pc
+
+def TrainSampNpts(filename):
+	pc = ReadNpts(filename, -1)
+	Rescale(pc)
+	return pc
+
+# CAD
+def SurfaceArea(p1, p2, p3):
+	vec1 = np.asarray([p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]])
+	vec2 = np.asarray([p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])
+	cross_vec = np.cross(vec1, vec2)
+	area = np.sqrt(cross_vec.dot(cross_vec))
+	return area/2
+
+def SurfaceSamp(p1, p2, p3, total):
+	pc = [p1, p2, p3]
+	if total <=3:
+		return pc
+
+	for i in range(total-3):
+		w = np.random.uniform(0., 1., size=[3])
+		w_norm = np.linalg.norm(w, ord=1)
+		w /= w_norm
+		x_samp = p1[0]*w[0] + p2[0]*w[1] + p3[0]*w[2]
+		y_samp = p1[1]*w[0] + p2[1]*w[1] + p3[1]*w[2]
+		z_samp = p1[2]*w[0] + p2[2]*w[1] + p3[2]*w[2]
+		pc.append([x_samp, y_samp, z_samp])
+
+	return pc
+
+def SampFromCAD(v, s):
+	magic_rate = 0.0001
+	pc = []
+	for i in range(len(s)):
+		p1 = v[s[i][1]]
+		p2 = v[s[i][2]]
+		p3 = v[s[i][3]]
+		sArea = SurfaceArea(p1, p2, p3)
+		pc.extend(SurfaceSamp(p1, p2, p3, int(sArea/magic_rate)))
+	return pc
+
+def ReadCAD(filename):
+	file = open(filename, "r")
+	content = file.read().strip().split("\n")
+	v_total = int(content[1].split(" ")[0])
+	s_total = int(content[1].split(" ")[1])
+	print(content[0])
+	print(v_total)
+	print(s_total)
+
+	vertics = [0]*v_total
+	for i in range(v_total):
+		line = content[i+2].strip().split(" ")
+		vertics[i] = [float(line[0]), float(line[1]), float(line[2])]
+
+	surfaces = [0]*s_total
+	for i in range(s_total):
+		line = content[i+2+v_total].strip().split(" ")
+		surfaces[i] = [int(line[0])]
+
+		for j in range(surfaces[i][0]):
+			surfaces[i].append(int(line[j+1]))
+
+	return vertics, surfaces
+
+def TrainSampCAD(filename):
+	v, s = ReadCAD(filename)
+	Rescale(v)
+	pc = SampFromCAD(v, s)
+	return pc
 
 '''
 pc = np.asarray(ReadNpts("horse.npts", 10000))

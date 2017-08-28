@@ -60,8 +60,7 @@ sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
 #Read Pointcloud
-pc = ReadNpts("horse.npts", -1)
-Rescale(pc)
+pc = TrainSampCAD("chair_0001.off")
 #DrawPc(pc,[[0,1],[0,1],[0,1]])
 tree = KDTree(pc, leaf_size=2)
 

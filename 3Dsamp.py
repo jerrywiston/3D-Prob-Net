@@ -47,7 +47,7 @@ print(y_re.shape[0])
 
 pc_re = []
 for i in range(y_re.shape[0]):
-	if y_re[i] > 0.96:
+	if y_re[i] > 0.94:
 		pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
 
 print(len(pc_re))
