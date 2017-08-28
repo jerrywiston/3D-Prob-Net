@@ -15,7 +15,6 @@ def uniform_samp(m, n):
 def prob_samp(tree, x_samp):
 	dist, _ = tree.query(x_samp, k=1)
 	res = 0.05
-	#print(dist.shape)
 	y = np.zeros(shape=dist.shape)
 	for i in range(len(dist)):
 		if(dist[i]<res):
@@ -33,13 +32,15 @@ def next_batch(imgs, size):
     return [img_samp, label_samp]
 
 z_dim = 100
-samp_size = 256
+samp_size = 512
 mb_size = 100
 
 # Placeholder
-x_ = tf.placeholder(tf.float32, shape=[None, 3])
-y_ = tf.placeholder(tf.float32, shape=[None, 1])
-z_ = tf.placeholder(tf.float32, shape=[None, z_dim])
+x_ = tf.placeholder(tf.float32, shape=[None, samp_size, 3])
+z_ = tf.placeholder(tf.float32, shape=[None, samp_size, z_dim])
+y_ = tf.placeholder(tf.float32, shape=[None, samp_size, 1])
+
+x_samp = tf.placeholder(tf.float32, shape=[None, 3])
 
 # Generator
 W_g1 = tf.Variable(xavier_init([3+z_dim,256]))
@@ -55,10 +56,14 @@ W_g4 = tf.Variable(xavier_init([256,1]))
 b_g4 = tf.Variable(tf.zeros(shape=[1]))
 
 def Generator(x, z):
-    x_concat = tf.concat(axis=1, values=[x, z])
-    h_g1 = tf.nn.relu(tf.matmul(x_concat, W_g1) + b_g1)
+    x_reshape = tf.reshape(x, [None, 3])
+    z_reshape = tf.reshape(z, [None, z_dim])
+    in_concat = tf.concat(axis=1, values=[x_reshape, z_reshape])
+
+    h_g1 = tf.nn.relu(tf.matmul(in_concat, W_g1) + b_g1)
     h_g2 = tf.nn.relu(tf.matmul(h_g1, W_g2) + b_g2)
     h_g3 = tf.nn.relu(tf.matmul(h_g2, W_g3) + b_g3)
+    
     y = tf.nn.sigmoid(tf.matmul(h_g3, W_g4) + b_g4)
     return y
 
@@ -76,14 +81,19 @@ W_d4 = tf.Variable(xavier_init([128, 1]))
 b_d4 = tf.Variable(tf.zeros(shape=[1]))
 
 def Discriminator(x, y):
-    y_reshape = tf.reshape(y, [None, samp_size])
-    y_concat = tf.concat(axis=1, values=[x, y_reshape])
-    h_d1 = tf.nn.relu(tf.matmul(y_concat, W_g1) + b_g1)
+    x_reshape = tf.reshape(x, [None, samp_size*3])
+    y_reshape = tf.reshape(y, [None, samp_size*1])
+    in_concat = tf.concat(axis=1, values=[x_reshape, y_reshape])
+    
+    h_d1 = tf.nn.relu(tf.matmul(in_concat, W_g1) + b_g1)
     h_d2 = tf.nn.relu(tf.matmul(h_d1, W_d2) + b_d2)
     h_d3 = tf.nn.relu(tf.matmul(h_d2, W_d3) + b_d3)
+    
     D_logit = tf.matmul(h_d3, W_d4) + b_d4
     D_prob = tf.nn.sigmoid(D_logit)
+    
     return D_logit
 
 D_loss = 0.5 * (tf.reduce_mean((D_real - 1)**2) + tf.reduce_mean((D_fake + 1)**2))
 G_loss = 0.5 * tf.reduce_mean((D_fake)**2)
+
