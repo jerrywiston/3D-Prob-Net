@@ -72,7 +72,7 @@ def ReadNpts(filename,num=-1):
 	total = len(content)
 	if num>0 and num<total:
 		total = num
-
+	print("File: " + filename)
 	print("Total: " + str(total))
 	pc = [0] * total
 
