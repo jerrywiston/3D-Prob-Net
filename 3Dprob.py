@@ -70,7 +70,7 @@ sess.run(tf.global_variables_initializer())
 
 #Read Pointcloud
 #pc = TrainSampNpts("horse.npts")
-pc = TrainSampCAD("chair_0003.off")
+pc = TrainSampCAD("3d_model/chair_0003.off")
 #DrawPc(pc,[[0,1],[0,1],[0,1]])
 tree = KDTree(pc, leaf_size=2)
 
@@ -91,19 +91,4 @@ for i in range(100000):
 
 print("Save parameter ...")
 saver = tf.train.Saver()
-save_path = saver.save(sess, "Model/chair.ckpt")
-
-'''
-x_re = uniform_samp(100000,3)
-y_re = sess.run(y,feed_dict={x_: x_re})
-print(y_re.shape[0])
-
-pc_re = []
-for i in range(y_re.shape[0]):
-	if y_re[i] > 0.8:
-		pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
-
-print(len(pc_re))
-#print(pc_re)
-DrawPc(pc_re,[[0,1],[0,1],[0,1]])
-'''
+save_path = saver.save(sess, "tf_model/chair.ckpt")
