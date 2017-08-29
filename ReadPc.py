@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 #from sklearn.neighbors import KDTree
 
+# Some Util Function
 def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="figure"):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')	
@@ -34,7 +35,7 @@ def Rescale(pc):
 			if p[i] > bound[i][1]:
 				bound[i][1] = p[i]
 
-	print("Bound: " + str(bound))
+	#print("Bound: " + str(bound))
 	
 	dist = [0]*3
 	for i in range(3):
@@ -54,7 +55,15 @@ def Rescale(pc):
 			p[i] *= rate
 			p[i] += 0.5
 
-# Npts
+def DownSample(pc, rate):
+	pc_down = []
+	for i in range(len(pc)):
+		if(rate*i < len(pc)-1):
+			pc_down.append(pc[rate*i])
+		else:
+			return pc_down
+
+# Npts Handle
 def ReadNpts(filename,num=-1):
 	file = open(filename, "r")
 	content = file.read().strip().split("\n")
@@ -88,7 +97,7 @@ def TrainSampNpts(filename):
 	Rescale(pc)
 	return pc
 
-# CAD
+# CAD Handle
 def SurfaceArea(p1, p2, p3):
 	vec1 = np.asarray([p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]])
 	vec2 = np.asarray([p3[0]-p1[0], p3[1]-p1[1], p3[2]-p1[2]])
@@ -131,9 +140,9 @@ def ReadCAD(filename):
 	file.close()
 	v_total = int(content[1].split(" ")[0])
 	s_total = int(content[1].split(" ")[1])
-	print(content[0])
-	print(v_total)
-	print(s_total)
+	#print(content[0])
+	#print(v_total)
+	#print(s_total)
 
 	vertics = [0]*v_total
 	for i in range(v_total):
@@ -157,26 +166,23 @@ def TrainSampCAD(filename):
 	return pc
 
 '''
+#Read model test
 pc = np.asarray(ReadNpts("horse.npts", 10000))
 #pc = ReadNpts("horse.npts", 10000)
 Rescale(pc)
 DrawPc(pc,[[0,1],[0,1],[0,1]])
 
-tree = KDTree(pc, leaf_size=2)
-dist, ind = tree.query([pc[3]], k=3)
-print(ind)
-print(dist)
-
+#Sample triangle test
 p1 = [0.0,0.0,0.0]
 p2 = [1.0,0.0,0.0]
 p3 = [0.0,1.0,0.0]
 pc = SurfaceSamp(p1,p2,p3,1000)
 DrawPc(pc)
 
-pc = TrainSampCAD("chair_0001.off")
+#Samp from CAD test
+pc = TrainSampCAD("3d_model/chair_0001.off")
 print(len(pc))
-DrawPc(pc, show=False)
+pc2 = DownSample(pc, 10)
+print(len(pc2))
+DrawPc(pc2)
 '''
-
-
-
