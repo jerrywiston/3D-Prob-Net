@@ -11,6 +11,16 @@ def xavier_init(size):
 def uniform_samp(m, n):
     return np.random.uniform(0., 1., size=[m, n])
 
+def ProbNetSamp(samp=500000, prob=0.94):
+	x_re = uniform_samp(samp,3)
+	y_re = sess.run(y,feed_dict={x_: x_re})
+	pc_re = []
+	for i in range(y_re.shape[0]):
+		if y_re[i] > prob:
+			pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
+
+	return pc_re
+
 #Probability Net
 x_ = tf.placeholder(tf.float32, shape=[None, 3])
 y_ = tf.placeholder(tf.float32, shape=[None, 1])
@@ -39,16 +49,9 @@ sess = tf.Session()
 #sess.run(tf.global_variables_initializer())
 
 saver = tf.train.Saver()
-saver.restore(sess, "tf_model/chair.ckpt")
+saver.restore(sess, "tf_save/chair.ckpt")
 
-x_re = uniform_samp(500000,3)
-y_re = sess.run(y,feed_dict={x_: x_re})
-print(y_re.shape[0])
-
-pc_re = []
-for i in range(y_re.shape[0]):
-	if y_re[i] > 0.94:
-		pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
+pc_re = ProbNetSamp()
 
 print(len(pc_re))
 DrawPc(pc_re,[[0,1],[0,1],[0,1]])
