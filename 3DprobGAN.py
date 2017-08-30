@@ -42,8 +42,8 @@ def ProbNetSamp(z_dim, samp=500000, prob=0.94):
 
     return pc_re
 
-z_dim = 100
-s_dim = 128
+z_dim = 64
+s_dim = 256
 b_size = 128
 
 # Placeholder
@@ -200,5 +200,5 @@ for i in range(100000):
 
     if i%10 == 0:
         print(str(i) + " " + str(D_loss_curr) + " " + str(G_loss_curr))
-        pc_re = ProbNetSamp(z_dim, samp=50000, prob=0.5)
+        pc_re = ProbNetSamp(z_dim, samp=50000, prob=0.8)
         DrawPc(pc_re, show=False, filename="out/" + str(i))
