@@ -1,2 +1,2 @@
-model_checkpoint_path: "chair.ckpt"
-all_model_checkpoint_paths: "chair.ckpt"
+model_checkpoint_path: "chair_glo.ckpt"
+all_model_checkpoint_paths: "chair_glo.ckpt"
