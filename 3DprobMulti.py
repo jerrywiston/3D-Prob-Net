@@ -65,21 +65,17 @@ b1 = tf.Variable(tf.zeros(shape=[256]))
 W2 = tf.Variable(xavier_init([256,512]))
 b2 = tf.Variable(tf.zeros(shape=[512]))
 
-W3 = tf.Variable(xavier_init([512,700]))
-b3 = tf.Variable(tf.zeros(shape=[700]))
+W3 = tf.Variable(xavier_init([512,256]))
+b3 = tf.Variable(tf.zeros(shape=[256]))
 
-W4 = tf.Variable(xavier_init([700,256]))
-b4 = tf.Variable(tf.zeros(shape=[256]))
-
-W5 = tf.Variable(xavier_init([256,1]))
-b5 = tf.Variable(tf.zeros(shape=[1]))
+W4 = tf.Variable(xavier_init([256,1]))
+b4 = tf.Variable(tf.zeros(shape=[1]))
 
 x_k = tf.concat(axis=1, values=[x_, k_])
 h1 = tf.nn.relu(tf.matmul(x_k, W1) + b1)
 h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)
 h3 = tf.nn.relu(tf.matmul(h2, W3) + b3)
-h4 = tf.nn.relu(tf.matmul(h3, W4) + b4)
-y = tf.nn.sigmoid(tf.matmul(h4, W5) + b5)
+y = tf.nn.sigmoid(tf.matmul(h3, W4) + b4)
 
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(y - y_), reduction_indices=[1]))
 solver = tf.train.AdamOptimizer().minimize(loss)
