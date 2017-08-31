@@ -117,13 +117,13 @@ for i in range(10):
 	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
 '''
 
-z_np = np.random.uniform(0., 1., size=[z_dim])
+z_np = np.random.uniform(-1., 1., size=[z_dim])
 z_np /= np.sqrt(z_np.dot(z_np))
 z = z_np.tolist()
 z_samp = []
 
 samp = 100000
-prob = 0.8
+prob = 0.9
 for i in range(samp):
 	z_samp.append(z)
 	
@@ -137,6 +137,7 @@ for i in range(y_samp.shape[0]):
 		pc_samp.append([x_samp[i][0], x_samp[i][1], x_samp[i][2]])
 
 print(len(pc_samp))
+print(z)
 DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
 
 
