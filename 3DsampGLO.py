@@ -11,9 +11,9 @@ def xavier_init(size):
 def uniform_samp(m, n):
     return np.random.uniform(0., 1., size=[m, n])
 
-def ProbNetSamp(kid, samp=200000, prob=0.94):
+def ProbNetSamp(key, samp=200000, prob=0.94):
 	x_re = uniform_samp(samp,3)
-	k_re = KeySamp(samp, totalModel, kid)
+	k_re = KeyTensor(key, samp)
 	y_re = sess.run(y_reconst, feed_dict={x_: x_re, k_: k_re})
 	pc_re = []
 	for i in range(y_re.shape[0]):
@@ -22,30 +22,28 @@ def ProbNetSamp(kid, samp=200000, prob=0.94):
 
 	return pc_re
 
-def KeySamp(mb_size, totalModel, kid):
-	k = [0.0]*totalModel
-	k[kid] = 1.0
-	k_samp = []
-	for i in range(mb_size):
-		k_samp.append(k)
-	return k_samp
-
-def ProbNetSamp2(key, samp=200000, prob=0.94):
-	x_re = uniform_samp(samp,3)
-	k_re = KeySamp2(key, samp, totalModel)
-	y_re = sess.run(y_reconst, feed_dict={x_: x_re, k_: k_re})
-	pc_re = []
-	for i in range(y_re.shape[0]):
-		if y_re[i] > prob:
-			pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
-
-	return pc_re
-
-def KeySamp2(key, mb_size, totalModel):
+def KeyTensor(key, mb_size):
 	k_samp = []
 	for i in range(mb_size):
 		k_samp.append(key)
 	return k_samp
+
+def ProbNetIdSamp(kid, samp=200000, prob=0.94):
+	key = OneKeyId(kid, totalModel)
+	pc_re = ProbNetSamp(key, samp, prob)
+
+	return pc_re
+
+def OneKeyId(kid, totalModel):
+	k = [0.0]*totalModel
+	k[kid] = 1.0
+	return k
+
+def OneKeyRand(totalModel):
+	k = np.random.uniform(0., 1., size=[totalModel])
+	k /= np.sqrt(k.dot(k))
+	return k.tolist()
+
 
 #Probability Net
 totalModel = 100
@@ -99,21 +97,49 @@ saver.restore(sess, "tf_save/chair_glo.ckpt")
 
 '''
 k = [0.0]*totalModel
-k[4] = 0.5
-k[23] = 0.5
-pc_re = ProbNetSamp2(key = k)
+k[8] = 0.5
+k[13] = 0.5
+pc_re = ProbNetSamp(key=k, samp=100000, prob=0.92)
 print(len(pc_re))
 DrawPc(pc_re,[[0,1],[0,1],[0,1]])
-
-k = np.random.uniform(0., 1., size=[totalModel])
-k /= np.sqrt(k.dot(k))
-pc_re = ProbNetSamp2(key = k.tolist())
-print(k)
-print(len(pc_re))
-DrawPc(pc_re,[[0,1],[0,1],[0,1]])
-'''
 
 for i in range(totalModel):
-	pc_re = ProbNetSamp(kid = i)
+	pc_re = ProbNetIdSamp(kid=i, samp=100000, prob=0.94)
 	print(len(pc_re))
 	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
+
+for i in range(10):
+	k = OneKeyRand(totalModel)
+	pc_re = ProbNetSamp(key=k, samp=100000, prob=0.94)
+	print(k)
+
+	print(len(pc_re))
+	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
+'''
+
+z_np = np.random.uniform(0., 1., size=[z_dim])
+z_np /= np.sqrt(z_np.dot(z_np))
+z = z_np.tolist()
+z_samp = []
+
+samp = 100000
+prob = 0.8
+for i in range(samp):
+	z_samp.append(z)
+	
+pc_samp = []
+
+x_samp = uniform_samp(samp,3)
+y_samp = sess.run(y_sample, feed_dict={x_: x_samp, z_: z_samp})
+
+for i in range(y_samp.shape[0]):
+	if y_samp[i] > prob:
+		pc_samp.append([x_samp[i][0], x_samp[i][1], x_samp[i][2]])
+
+print(len(pc_samp))
+DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
+
+
+
+
+

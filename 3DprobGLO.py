@@ -135,8 +135,11 @@ for i in range(1000000):
 
 	if i%1000 == 0:
 		print(str(i) + " " + str(_loss))
-		pc_re = ProbNetSamp(totalModel, samp=50000, prob=0.9)
-		DrawPc(pc_re, show=False, filename="out/" + str(i))
+		if i%10000 == 0:
+			pc_re = ProbNetSamp(totalModel, samp=50000, prob=0.9)
+			DrawPc(pc_re, show=False, filename="out/" + str(i))
+
+
 
 print("Save parameter ...")
 saver = tf.train.Saver()
