@@ -54,8 +54,9 @@ def KeySamp(mb_size, totalModel, kid):
 	return k_samp
 
 #Probability Net
-totalModel = 100
+totalModel = 250
 z_dim = 10
+mb_size = 200
 
 x_ = tf.placeholder(tf.float32, shape=[None, 3])
 k_ = tf.placeholder(tf.float32, shape=[None, totalModel])
@@ -93,6 +94,41 @@ def ProbNet(x, z):
 	y = tf.nn.sigmoid(tf.matmul(h4, W5) + b5)
 	return y
 
+def LoadData(path, totalModel):
+	files = [f for f in os.listdir(path)]
+	pc_list = []
+	tree_list = []
+	count = 0
+
+	for filename in files:
+		f = filename.split(".")
+
+		if len(f)==2 and f[1].strip()=="npts":
+			pc = TrainSampNpts(path + filename)
+			pc_list.append(pc)
+			tree = KDTree(pc, leaf_size=2)
+			tree_list.append(tree)
+			count += 1
+
+		if count >= totalModel:
+			break
+
+	return pc_list, tree_list
+
+def LoadDataId(path, totalModel):
+	pc_list = []
+	tree_list = []
+	count = 0
+
+	for i in range(totalModel):
+		filename = str(i) + ".npts"
+		pc = TrainSampNpts(path + filename)
+		pc_list.append(pc)
+		tree = KDTree(pc, leaf_size=2)
+		tree_list.append(tree)
+
+	return pc_list, tree_list
+
 z_encode = EncodeNet(k_)
 y_reconst = ProbNet(x_, z_encode)
 y_sample = ProbNet(x_, z_)
@@ -104,25 +140,11 @@ sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
 path = "3d_model/ModelNet10_chair/"
-files = [f for f in os.listdir(path)]
-pc_list = []
-tree_list = []
-count = 0
-for filename in files:
-    f = filename.split(".")
-    if len(f)==2 and f[1].strip()=="npts":
-        pc = TrainSampNpts(path + filename)
-        pc_list.append(pc)
-        tree = KDTree(pc, leaf_size=2)
-        tree_list.append(tree)
-        
-        count += 1
-        if count >= totalModel:
-        	break
+[pc_list, tree_list] = LoadDataId(path, totalModel)
 
-mb_size = 200
-for i in range(1000000):
+for i in range(500000):
 	kid = random.randint(0,totalModel-1)
+
 	x_uni_samp = uniform_samp(mb_size,3)
 	y_uni_samp = prob_samp(tree_list[kid], x_uni_samp)
 	x_pc_samp, y_pc_samp = next_batch(pc_list[kid], round(mb_size/2))
@@ -140,7 +162,6 @@ for i in range(1000000):
 			DrawPc(pc_re, show=False, filename="out/" + str(i))
 
 
-
 print("Save parameter ...")
 saver = tf.train.Saver()
-save_path = saver.save(sess, "tf_save/chair_glo.ckpt")
+save_path = saver.save(sess, "tf_save/chair_glo_889.ckpt")

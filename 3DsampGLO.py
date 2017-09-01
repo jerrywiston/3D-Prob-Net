@@ -44,9 +44,38 @@ def OneKeyRand(totalModel):
 	k /= np.sqrt(k.dot(k))
 	return k.tolist()
 
+def OneZRand(z_dim):
+	z_np = np.random.uniform(-1., 1., size=[z_dim])
+	z_np /= np.sqrt(z_np.dot(z_np))
+	z = z_np.tolist()
+	return z
+
+def ZSamp(z, samp=100000, prob=0.9):
+	print("Latent Variable: ")
+	print(z)
+	z_samp = []
+
+	for i in range(samp):
+		z_samp.append(z)
+	
+	pc_samp = []
+
+	x_samp = uniform_samp(samp,3)
+	y_samp = sess.run(y_sample, feed_dict={x_: x_samp, z_: z_samp})
+
+	for i in range(y_samp.shape[0]):
+		if y_samp[i] > prob:
+			pc_samp.append([x_samp[i][0], x_samp[i][1], x_samp[i][2]])
+
+	return pc_samp
+
+def Znormalize(z):
+	z_np = np.asarray(z)
+	z_np /= np.sqrt(z_np.dot(z_np))
+	return z_np.tolist()
 
 #Probability Net
-totalModel = 100
+totalModel = 250
 z_dim = 10
 
 x_ = tf.placeholder(tf.float32, shape=[None, 3])
@@ -93,9 +122,10 @@ sess = tf.Session()
 #sess.run(tf.global_variables_initializer())
 
 saver = tf.train.Saver()
-saver.restore(sess, "tf_save/chair_glo.ckpt")
+saver.restore(sess, "tf_save/chair_glo_889.ckpt")
 
 '''
+### Two key samp test 
 k = [0.0]*totalModel
 k[8] = 0.5
 k[13] = 0.5
@@ -103,43 +133,41 @@ pc_re = ProbNetSamp(key=k, samp=100000, prob=0.92)
 print(len(pc_re))
 DrawPc(pc_re,[[0,1],[0,1],[0,1]])
 
-for i in range(totalModel):
+
+### Reconstruct test
+for i in range(100):
 	pc_re = ProbNetIdSamp(kid=i, samp=100000, prob=0.94)
 	print(len(pc_re))
-	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
+	DrawPc(pc_re,[[0,1],[0,1],[0,1]],  show=False, filename="out/reconst/" + str(i+1) + "_reconst")
 
-for i in range(10):
+### k samp test
+for i in range(100):
 	k = OneKeyRand(totalModel)
 	pc_re = ProbNetSamp(key=k, samp=100000, prob=0.94)
 	print(k)
 
 	print(len(pc_re))
 	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
+
+### z samp test
+for i in range(10):
+	z = OneZRand(z_dim)
+	pc_samp = ZSamp(z, 100000, 0.9)
+	print("Total Point: " + str(len(pc_samp)))
+	DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
+	#DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/samp/" + str(i) + "_reconst")
 '''
 
-z_np = np.random.uniform(-1., 1., size=[z_dim])
-z_np /= np.sqrt(z_np.dot(z_np))
-z = z_np.tolist()
-z_samp = []
-
-samp = 100000
-prob = 0.9
-for i in range(samp):
-	z_samp.append(z)
-	
-pc_samp = []
-
-x_samp = uniform_samp(samp,3)
-y_samp = sess.run(y_sample, feed_dict={x_: x_samp, z_: z_samp})
-
-for i in range(y_samp.shape[0]):
-	if y_samp[i] > prob:
-		pc_samp.append([x_samp[i][0], x_samp[i][1], x_samp[i][2]])
-
-print(len(pc_samp))
-print(z)
-DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
-
+# Interpolation test
+z = [0]*z_dim
+#5,1
+for i in range(6):
+	z[9] = i*0.2
+	z[7] = 1-z[9]
+	z_samp = Znormalize(z)
+	pc_samp = ZSamp(z_samp, 100000, 0.9)
+	print("Total Point: " + str(len(pc_samp)))
+	DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/interpo/" + str(i) + "_interpo")
 
 
 
