@@ -165,6 +165,43 @@ def TrainSampCAD(filename):
 	pc = SampFromCAD(v, s)
 	return pc
 
+# 2D to 3D
+def NptsToView(pc, res):
+	x_view = np.zeros(shape=[res, res])
+	y_view = np.zeros(shape=[res, res])
+	z_view = np.zeros(shape=[res, res])
+
+	for p in pc:
+		idx = int(p[0]*(res-1))
+		idy = int(p[1]*(res-1))
+		idz = int(p[2]*(res-1))
+
+		if x_view[res-1-idz][idy]<1.0:
+			x_view[res-1-idz][idy] += 0.01
+		else:
+			x_view[res-1-idz][idy] = 1.0
+
+		if y_view[res-1-idz][idx]<1.0:
+			y_view[res-1-idz][idx] += 0.01
+		else:
+			y_view[res-1-idz][idx] = 1.0
+
+		if z_view[idy][idx]<1.0:
+			z_view[idy][idx] += 0.01
+		else:
+			z_view[idy][idx] = 1.0
+
+	#plt.imshow(x_view, cmap='Greys_r')
+	#plt.show()
+	#plt.imshow(y_view, cmap='Greys_r')
+	#plt.show()
+	#plt.imshow(z_view, cmap='Greys_r')
+	#plt.show()
+	view_list = np.asarray([x_view.tolist(), y_view.tolist(), z_view.tolist()])
+	view_list = np.swapaxes(view_list, 0, 1)
+	view_list = np.swapaxes(view_list, 1, 2)
+	return view_list.tolist()
+
 '''
 #Read model test
 pc = np.asarray(ReadNpts("horse.npts", 10000))
@@ -185,4 +222,10 @@ print(len(pc))
 pc2 = DownSample(pc, 10)
 print(len(pc2))
 DrawPc(pc2)
+
+#2D View
+pc = ReadNpts("3d_model/ModelNet10_chair/136.npts")
+pc2 = DownSample(pc, 2)
+DrawPc(pc2)
+NptsToView(pc, 32)
 '''

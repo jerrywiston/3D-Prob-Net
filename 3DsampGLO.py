@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from ReadPc import *
 from sklearn.neighbors import KDTree
+import random
 
 def xavier_init(size):
     in_dim = size[0]
@@ -22,6 +23,27 @@ def ProbNetSamp(key, samp=200000, prob=0.94):
 
 	return pc_re
 
+def VoxelX(vox_len):
+	x_re = []
+	for i in range(vox_len):
+		for j in range(vox_len):
+			for k in range(vox_len):
+				x_re.append([float(i)/vox_len, float(j)/vox_len, float(k)/vox_len])
+	return x_re
+
+def ProbNetSampVoxel(key, vox_len=64, prob=0.94):
+	x_re = VoxelX(vox_len)
+
+	k_re = KeyTensor(key, len(x_re))
+	y_re = sess.run(y_reconst, feed_dict={x_: x_re, k_: k_re})
+	pc_re = []
+	for i in range(y_re.shape[0]):
+		if y_re[i] > prob:
+			pc_re.append([x_re[i][0], x_re[i][1], x_re[i][2]])
+
+	return pc_re
+
+
 def KeyTensor(key, mb_size):
 	k_samp = []
 	for i in range(mb_size):
@@ -31,6 +53,12 @@ def KeyTensor(key, mb_size):
 def ProbNetIdSamp(kid, samp=200000, prob=0.94):
 	key = OneKeyId(kid, totalModel)
 	pc_re = ProbNetSamp(key, samp, prob)
+
+	return pc_re
+
+def ProbNetIdSampVoxel(kid, vox_len=64, prob=0.94):
+	key = OneKeyId(kid, totalModel)
+	pc_re = ProbNetSampVoxel(key, vox_len, prob)
 
 	return pc_re
 
@@ -45,8 +73,10 @@ def OneKeyRand(totalModel):
 	return k.tolist()
 
 def OneZRand(z_dim):
+	scale = random.uniform(0., 1.)
 	z_np = np.random.uniform(-1., 1., size=[z_dim])
 	z_np /= np.sqrt(z_np.dot(z_np))
+	z_np *= scale
 	z = z_np.tolist()
 	return z
 
@@ -61,6 +91,25 @@ def ZSamp(z, samp=100000, prob=0.9):
 	pc_samp = []
 
 	x_samp = uniform_samp(samp,3)
+	y_samp = sess.run(y_sample, feed_dict={x_: x_samp, z_: z_samp})
+
+	for i in range(y_samp.shape[0]):
+		if y_samp[i] > prob:
+			pc_samp.append([x_samp[i][0], x_samp[i][1], x_samp[i][2]])
+
+	return pc_samp
+
+def ZSampVoxel(z, vox_len=50, prob=0.9):
+	print("Latent Variable: ")
+	print(z)
+	z_samp = []
+
+	for i in range(vox_len*vox_len*vox_len):
+		z_samp.append(z)
+	
+	pc_samp = []
+
+	x_samp = VoxelX(vox_len)
 	y_samp = sess.run(y_sample, feed_dict={x_: x_samp, z_: z_samp})
 
 	for i in range(y_samp.shape[0]):
@@ -148,27 +197,39 @@ for i in range(100):
 
 	print(len(pc_re))
 	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
-
-### z samp test
-for i in range(10):
-	z = OneZRand(z_dim)
-	pc_samp = ZSamp(z, 100000, 0.9)
-	print("Total Point: " + str(len(pc_samp)))
-	DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
-	#DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/samp/" + str(i) + "_reconst")
 '''
+### z samp test
+for i in range(25,100):
+	z = OneZRand(z_dim)
+	#pc_samp = ZSamp(z, 100000, 0.9)
+	pc_samp = ZSampVoxel(z, 50, 0.95)
+	print("Total Point: " + str(len(pc_samp)))
+	#DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
+	DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/samp/" + str(i) + "_samp")
 
+'''
 # Interpolation test
-z = [0]*z_dim
-#5,1
+#38,48
+#46,83
+#55,58
+k1 = [0.0]*totalModel
+k1[55] = 1.0
+k2 = [0.0]*totalModel
+k2[58] = 1.0
+z_e = sess.run(z_encode, feed_dict={k_:np.asarray([k1, k2])})
+
 for i in range(6):
-	z[9] = i*0.2
-	z[7] = 1-z[9]
-	z_samp = Znormalize(z)
+	z = 0.2*i*z_e[1] + (1-0.2*i)*z_e[0]
+	z_samp = Znormalize(z.tolist())
 	pc_samp = ZSamp(z_samp, 100000, 0.9)
 	print("Total Point: " + str(len(pc_samp)))
 	DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/interpo/" + str(i) + "_interpo")
 
 
 
+for i in range(100):
+	pc_re = ProbNetIdSampVoxel(kid=i, vox_len=50, prob=0.92)
+	print(len(pc_re))
+	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
 
+'''
