@@ -30,7 +30,7 @@ def prob_samp(tree, x_samp, f=1):
 			if(dist[i]<res):
 				y[i] = (res - dist[i]) / res
 	else:
-		y = gaussian(dist, 0.0, 0.05).tolist()
+		y = gaussian(dist, 0.0, 0.03).tolist()
 	return y
 
 def next_batch(imgs, size):
@@ -173,6 +173,7 @@ b5 = tf.Variable(tf.zeros(shape=[1]))
 
 def EncodeNet(k):
 	z_digit = tf.matmul(k, W_z)
+	#z = tf.nn.l2_normalize(z_digit, dim=1, epsilon=1, name=None)
 	return z_digit
 
 def ProbNet(x, z):
@@ -261,15 +262,18 @@ msg = "(" + saveName + ")"
 WriteMessage(file, msg)
 
 for i in range(100001):
+	# Optimize
 	kid, x_samp, y_samp, k_samp = NextTrainBatch(totalModel, mb_size, pc_list, tree_list)
-
 	_, _loss = sess.run([solver, loss],  feed_dict={x_: x_samp, k_: k_samp, y_: y_samp})
+
+	# Rescale
 	z_latent = sess.run(W_z)
 	z_latent = LatentRescale(z_latent)
 	sess.run(z_rescale, feed_dict={z_re: z_latent})
 
+	# Print msg
 	if i%10000 == 0:
-		pc_re = ProbNetIdSampVoxel(kid, 40, 0.94)
+		pc_re = ProbNetIdSampVoxel(kid, 50, 0.94)
 		msg = "[" + str(datetime.now()) + "] Sample id " + str(kid+1) + ", Size = " + str(len(pc_re))
 		WriteMessage(file, msg)
 		DrawPc(pc_re, show=False, filename="out/" + str(i))

@@ -29,10 +29,8 @@ def uni(x, u, r):
 	return y
 
 x = np.linspace(-0.5, 0.5, num=1000)
-#y = gaussian(x, 0.0, 0.05)
-y = uni(x, 0.0, 0.05)
-print(np.exp(0))
-#print(gaussian(1.3, 0, 1.0))
+y = gaussian(x, 0.0, 0.03)
+#y = uni(x, 0.0, 0.05)
 plt.plot(x,y)
 plt.show()
 
