@@ -123,8 +123,31 @@ def Znormalize(z):
 	z_np /= np.sqrt(z_np.dot(z_np))
 	return z_np.tolist()
 
+'''
+def PointNormal(sess, pc, k, delta):
+	nm = []
+	k_samp = []
+	for i in range(6):
+		k_samp.append(k)
+
+	for p in pc:
+		px_1 = p[0] + delta
+		px_2 = p[0] - delta
+		py_1 = p[1] + delta
+		py_2 = p[1] - delta
+		pz_1 = p[2] + delta
+		pz_2 = p[2] - delta
+		p_samp = [px_1, px_2, py_1, py_2, pz_1, pz_2]
+
+		p_grad = sess.run(y_reconst_prob, feed_dict={k_: np.asarray(k_samp), x_: np.asarray(p_samp)})
+		p_g = [p_grad[0]-p_grad[1], p_grad[2]-p_grad[3], p_grad[4]-p_grad[5]]
+		p_g_np = p_g.asarray(p_g)
+		p_g_np /= np.sqrt(p_g_np.dot(p_g_np))
+		nm.append(p_g_np.tolist())
+	return nm
+'''
 #Probability Net
-totalModel = 250
+totalModel = 200
 z_dim = 10
 
 x_ = tf.placeholder(tf.float32, shape=[None, 3])
@@ -151,8 +174,8 @@ b5 = tf.Variable(tf.zeros(shape=[1]))
 
 def EncodeNet(k):
 	z_digit = tf.matmul(k_, W_z)
-	z = tf.nn.l2_normalize(z_digit, dim=1, epsilon=1, name=None)
-	return z
+	#z = tf.nn.l2_normalize(z_digit, dim=1, epsilon=1, name=None)
+	return z_digit
 
 def ProbNet(x, z):
 	x_z = tf.concat(axis=1, values=[x, z])
@@ -160,18 +183,19 @@ def ProbNet(x, z):
 	h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)
 	h3 = tf.nn.relu(tf.matmul(h2, W3) + b3)
 	h4 = tf.nn.relu(tf.matmul(h3, W4) + b4)
-	y = tf.nn.sigmoid(tf.matmul(h4, W5) + b5)
-	return y
+	y_digit = tf.matmul(h4, W5) + b5
+	y_prob = tf.nn.sigmoid(y_digit)
+	return y_digit, y_prob
 
 z_encode = EncodeNet(k_)
-y_reconst = ProbNet(x_, z_encode)
-y_sample = ProbNet(x_, z_)
+y_reconst, _ = ProbNet(x_, z_encode)
+_, y_sample = ProbNet(x_, z_)
 
 sess = tf.Session()
 #sess.run(tf.global_variables_initializer())
 
 saver = tf.train.Saver()
-saver.restore(sess, "tf_save/chair_glo_889.ckpt")
+saver.restore(sess, "tf_save/chair_glo_250.ckpt")
 
 '''
 ### Two key samp test 
@@ -197,16 +221,15 @@ for i in range(100):
 
 	print(len(pc_re))
 	DrawPc(pc_re,[[0,1],[0,1],[0,1]])
-'''
+
 ### z samp test
-for i in range(25,100):
+for i in range(10):
 	z = OneZRand(z_dim)
 	#pc_samp = ZSamp(z, 100000, 0.9)
-	pc_samp = ZSampVoxel(z, 50, 0.95)
+	pc_samp = ZSampVoxel(z, 50, 0.9)
 	print("Total Point: " + str(len(pc_samp)))
-	#DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
-	DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/samp/" + str(i) + "_samp")
-
+	DrawPc(pc_samp,[[0,1],[0,1],[0,1]])
+	#DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/samp/" + str(i) + "_samp")
 '''
 # Interpolation test
 #38,48
@@ -221,10 +244,10 @@ z_e = sess.run(z_encode, feed_dict={k_:np.asarray([k1, k2])})
 for i in range(6):
 	z = 0.2*i*z_e[1] + (1-0.2*i)*z_e[0]
 	z_samp = Znormalize(z.tolist())
-	pc_samp = ZSamp(z_samp, 100000, 0.9)
+	pc_samp = ZSampVoxel(z_samp, 50, 0.95)
 	print("Total Point: " + str(len(pc_samp)))
 	DrawPc(pc_samp,[[0,1],[0,1],[0,1]], show=False, filename="out/interpo/" + str(i) + "_interpo")
-
+'''
 
 
 for i in range(100):

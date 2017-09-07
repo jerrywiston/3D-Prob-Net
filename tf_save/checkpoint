@@ -1,0 +1,2 @@
+model_checkpoint_path: "chair_glo_250.ckpt"
+all_model_checkpoint_paths: "chair_glo_250.ckpt"
