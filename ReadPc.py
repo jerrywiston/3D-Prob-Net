@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from mayavi import mlab
 #from sklearn.neighbors import KDTree
 
 # Some Util Function
-def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="figure"):
+def DrawPcMatplot(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="figure"):
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')	
 
@@ -19,12 +20,24 @@ def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="fi
 	ax.set_xlim(scale[0])
 	ax.set_ylim(scale[1])
 	ax.set_zlim(scale[2])
-	#plt.axis('off')
 	if(show):
 		plt.show()
 	else:
 		plt.savefig(filename + '.png', bbox_inches='tight')
 	plt.close(fig)
+
+def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="figure"):	
+	if len(pc) > 0:
+		pc_np = np.asarray(pc)
+		s = mlab.points3d(pc_np[:,0], pc_np[:,1], pc_np[:,2])
+		
+	mlab.view(135, -54, 3.5)
+	if(show):
+		mlab.show()
+	else:
+		mlab.savefig(size=(400,400), filename=filename + '.png')
+	
+	mlab.close()
 
 def Rescale(pc):
 	bound = [[999,-999],[999,-999],[999,-999]]
@@ -83,7 +96,7 @@ def ReadNpts(filename,num=-1):
 		p3 = float(temp[2].strip())
 		pc[i] = [p1, p2, p3]
 
-	print("Read Npts Done !!")
+	#print("Read Npts Done !!")
 	return pc
 
 def SaveNpts(pc, filename):

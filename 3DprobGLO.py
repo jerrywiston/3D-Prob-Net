@@ -138,7 +138,7 @@ def TrainLatent(grad, id_list, z_train, rate):
         z_train[id_list[i]] = LatentRescale(z_update)
 
 #========================= Data & Parameter =========================
-sample_size = 10
+sample_size = 100
 latent_size = 10
 batch_size = 300
 
@@ -212,14 +212,15 @@ for i in range(400001):
 	TrainLatent(grad_np, np.asarray([zid]), z_train, 1.)
 
 	# Print message
-	if i%10000 == 0:
+	if i%1000 == 0:
 		pc_re = ProbNetSampVoxel(sess, z_train[zid], 50, 0.94)
+		pc_samp = ProbNetSampVoxel(sess, ZSamp(latent_size), 50, 0.94)
 		msg = '[{}] Sample id {}, Size = {}'.format(str(datetime.now()), str(zid+1), str(len(pc_re)))
 		WriteMessage(file, msg)
-		if len(pc_re) < 15000:
-			DrawPc(pc_re, show=False, filename="out/" + str(i))
+		DrawPc(pc_re, show=False, filename="out/{}_recon".format(str(i)))
+		DrawPc(pc_samp, show=False, filename="out/{}_sample".format(str(i)))
 
-	if i%1000 == 0:
+	if i%100 == 0:
 		loss_ = sess.run(loss, feed_dict={x_: x_batch, z_: z_batch, y_: y_batch})
 		msg = '{} Iter, Loss: {}'.format(str(i), loss_)
 		WriteMessage(file, msg)
