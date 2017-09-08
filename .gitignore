@@ -1,1 +1,3 @@
 *.npts
+out/
+out_record/
