@@ -26,10 +26,10 @@ def DrawPcMatplot(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filen
 		plt.savefig(filename + '.png', bbox_inches='tight')
 	plt.close(fig)
 
-def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], show=True, filename="figure"):	
+def DrawPc(pc, scale=[[0.0, 1.0],[0.0, 1.0],[0.0, 1.0]], color=(1.,1.,1.), show=True, filename="figure"):	
 	if len(pc) > 0:
 		pc_np = np.asarray(pc)
-		s = mlab.points3d(pc_np[:,0], pc_np[:,1], pc_np[:,2])
+		s = mlab.points3d(pc_np[:,0], pc_np[:,1], pc_np[:,2], color=color)
 		
 	mlab.view(135, -54, 3.5)
 	if(show):
@@ -85,7 +85,7 @@ def ReadNpts(filename,num=-1):
 	total = len(content)
 	if num>0 and num<total:
 		total = num
-	print("File: " + filename)
+	#print("File: " + filename)
 	#print("Total: " + str(total))
 	pc = [0] * total
 

@@ -1,5 +1,0 @@
-0: chair
-1: monitor
-2: nightstand
-3: sofa
-4: toilet

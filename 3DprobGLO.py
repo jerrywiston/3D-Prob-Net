@@ -18,13 +18,15 @@ def LoadDataOneFileId(path, id):
 def LoadDataFileId(path, totalModel):
 	pc_list = []
 	tree_list = []
+	data_list = []
 
 	for i in range(totalModel):
 		pc, tree = LoadDataOneFileId(path, i)
 		pc_list.append(pc)
 		tree_list.append(tree)
+		data_list.append(i)
 
-	return pc_list, tree_list
+	return pc_list, tree_list, data_list
 
 def LoadDataFileFolder(path, totalModel):
 	files = [f for f in os.listdir(path)]
@@ -68,7 +70,7 @@ def TrainPcSamp(pc, size):
         label_samp[i] = 1.0
     return [pc_samp, label_samp]
 
-def NextTrainBatch(totalModel, mb_size, pc, tree):
+def NextTrainBatch(mb_size, pc, tree):
 	mb_uni_size = int(mb_size*2/3)
 	mb_pc_size = mb_size - mb_uni_size
 
@@ -138,11 +140,11 @@ def TrainLatent(grad, id_list, z_train, rate):
         z_train[id_list[i]] = LatentRescale(z_update)
 
 #========================= Data & Parameter =========================
-sample_size = 100
+data_size = 100
 latent_size = 10
 batch_size = 300
 
-z_train = np.random.normal(0., 0.5, [sample_size, latent_size])
+z_train = np.random.normal(0., 0.5, [data_size, latent_size])
 
 #========================= Net Model =========================
 def xavier_init(size):
@@ -195,17 +197,18 @@ sess.run(tf.global_variables_initializer())
 #========================= Main =========================
 saveName = "chair_glo_250.ckpt"
 path = "3d_model/ModelNet10_chair/"
-[pc_list, tree_list] = LoadDataFileId(path, sample_size)
+[pc_list, tree_list, data_list] = LoadDataFileId(path, data_size)
 
 # Record file
 file = open("out/Record.txt", "a")
 msg = "(" + saveName + ")"
 WriteMessage(file, msg)
+fi = 0
 
 for i in range(400001):
 	# Optimize
-	zid = random.randint(0,sample_size-1)
-	x_batch, y_batch = NextTrainBatch(sample_size, batch_size, pc_list[zid], tree_list[zid])
+	zid = random.randint(0,data_size-1)
+	x_batch, y_batch = NextTrainBatch(batch_size, pc_list[zid], tree_list[zid])
 	z_batch = ZTensor(z_train[zid], batch_size)
 	_, grad = sess.run([solver, z_gradients],  feed_dict={x_: x_batch, z_: z_batch, y_: y_batch})
 	grad_np = np.asarray(grad[0])
@@ -217,8 +220,9 @@ for i in range(400001):
 		pc_samp = ProbNetSampVoxel(sess, ZSamp(latent_size), 50, 0.94)
 		msg = '[{}] Sample id {}, Size = {}'.format(str(datetime.now()), str(zid+1), str(len(pc_re)))
 		WriteMessage(file, msg)
-		DrawPc(pc_re, show=False, filename="out/{}_recon".format(str(i)))
-		DrawPc(pc_samp, show=False, filename="out/{}_sample".format(str(i)))
+		DrawPc(pc_re, show=False, filename="out/{}_recon".format(str(fi).zfill(4)))
+		DrawPc(pc_samp, show=False, filename="out/{}_sample".format(str(fi).zfill(4)))
+		fi += 1
 
 	if i%100 == 0:
 		loss_ = sess.run(loss, feed_dict={x_: x_batch, z_: z_batch, y_: y_batch})

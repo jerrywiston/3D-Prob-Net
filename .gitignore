@@ -1,3 +1,5 @@
 *.npts
 out_record/
 *.png
+3d_model/
+*
