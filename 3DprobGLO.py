@@ -6,6 +6,7 @@ from sklearn.neighbors import KDTree
 import random
 import os
 from datetime import datetime
+import json
 
 #========================= Util Function =========================
 # File Load
@@ -48,6 +49,12 @@ def LoadDataFileFolder(path, totalModel):
 			break
 
 	return pc_list, tree_list
+
+#tensorflow parameter save
+def TfSave(sess, saveName):
+	print("Save parameter ...")
+	saver = tf.train.Saver()
+	save_path = saver.save(sess, "tf_save/" + saveName)
 
 #Train Sample Generate
 def Gaussian(x, u, sig):
@@ -139,10 +146,16 @@ def TrainLatent(grad, id_list, z_train, rate):
         z_update = z_train[id_list[i]] - rate * grad[i]
         z_train[id_list[i]] = LatentRescale(z_update)
 
+def LatentSaveText(z_train, filename):
+	file = open(filename, "w")
+	for z in z_train:
+		file.write('[' + ' '.join(str(x) for x in z) + ']\n')
+	file.close()
+
 #========================= Data & Parameter =========================
-data_size = 100
-latent_size = 10
-batch_size = 300
+data_size = 889
+latent_size = 16
+batch_size = 512
 
 z_train = np.random.normal(0., 0.5, [data_size, latent_size])
 
@@ -195,8 +208,9 @@ sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
 #========================= Main =========================
-saveName = "chair_glo_250.ckpt"
-path = "3d_model/ModelNet10_chair/"
+saveName = "chair_glo_889.ckpt"
+path = "3d_model/ModelNet10_npts/npts/"
+print("Read Data ...")
 [pc_list, tree_list, data_list] = LoadDataFileId(path, data_size)
 
 # Record file
@@ -205,7 +219,13 @@ msg = "(" + saveName + ")"
 WriteMessage(file, msg)
 fi = 0
 
-for i in range(400001):
+for i in range(800001):
+	if i%10000 == 0:
+		TfSave(sess, saveName)
+		LatentSaveText(z_train, "out/Latent.txt")
+		file.close()
+		file = open("out/Record.txt", "a")
+
 	# Optimize
 	zid = random.randint(0,data_size-1)
 	x_batch, y_batch = NextTrainBatch(batch_size, pc_list[zid], tree_list[zid])
@@ -220,8 +240,8 @@ for i in range(400001):
 		pc_samp = ProbNetSampVoxel(sess, ZSamp(latent_size), 50, 0.94)
 		msg = '[{}] Sample id {}, Size = {}'.format(str(datetime.now()), str(zid+1), str(len(pc_re)))
 		WriteMessage(file, msg)
-		DrawPc(pc_re, show=False, filename="out/{}_recon".format(str(fi).zfill(4)))
-		DrawPc(pc_samp, show=False, filename="out/{}_sample".format(str(fi).zfill(4)))
+		DrawPc(pc_re, show=False, color=(1.,1.,1.), filename="out/{}_recon".format(str(fi).zfill(4)))
+		DrawPc(pc_samp, show=False, color=(0.5,1.0,0.5), filename="out/{}_sample".format(str(fi).zfill(4)))
 		fi += 1
 
 	if i%100 == 0:

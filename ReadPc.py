@@ -190,17 +190,17 @@ def NptsToView(pc, res):
 		idz = int(p[2]*(res-1))
 
 		if x_view[res-1-idz][idy]<1.0:
-			x_view[res-1-idz][idy] += 0.01
+			x_view[res-1-idz][idy] += 0.1
 		else:
 			x_view[res-1-idz][idy] = 1.0
 
 		if y_view[res-1-idz][idx]<1.0:
-			y_view[res-1-idz][idx] += 0.01
+			y_view[res-1-idz][idx] += 0.1
 		else:
 			y_view[res-1-idz][idx] = 1.0
 
 		if z_view[idy][idx]<1.0:
-			z_view[idy][idx] += 0.01
+			z_view[idy][idx] += 0.1
 		else:
 			z_view[idy][idx] = 1.0
 
@@ -237,8 +237,9 @@ print(len(pc2))
 DrawPc(pc2)
 
 #2D View
-pc = ReadNpts("3d_model/ModelNet10_chair/49.npts")
+pc = ReadNpts("3d_model/ModelNet10_npts/npts/49.npts")
 pc2 = DownSample(pc, 30)
 #DrawPc(pc2)
 NptsToView(pc, 32)
 '''
+
